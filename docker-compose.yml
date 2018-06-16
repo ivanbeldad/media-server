@@ -1,0 +1,108 @@
+version: '3'
+
+services:
+  plex:
+    image: plexinc/pms-docker
+    networks:
+    - bridge
+    environment:
+    - PLEX_UID=${MEDIA_UID}
+    - PLEX_GID=${MEDIA_GID}
+    volumes:
+    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/config/plex:/config
+    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/tmp/transcode:/transcode
+    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/media:/data
+    - /etc/localtime:/etc/localtime:ro
+
+  transmission:
+    image: linuxserver/transmission
+    networks:
+    - bridge
+    environment:
+    - PUID=${MEDIA_UID}
+    - GUID=${MEDIA_GID}
+    volumes:
+    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/config/transmission:/config
+    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/tmp/downloads:/downloads
+    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/tmp/watch:/watch
+    - /etc/localtime:/etc/localtime:ro
+
+  sonarr:
+    image: linuxserver/sonarr
+    depends_on:
+    - transmission
+    - jackett
+    networks:
+    - bridge
+    environment:
+    - PUID=${MEDIA_UID}
+    - GUID=${MEDIA_GID}
+    volumes:
+    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/config/sonarr:/config
+    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/tmp/downloads:/downloads
+    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/media/tv:/tv
+    - /etc/localtime:/etc/localtime:ro
+
+  radarr:
+    image: linuxserver/radarr
+    depends_on:
+    - transmission
+    - jackett
+    networks:
+    - bridge
+    environment:
+    - PUID=${MEDIA_UID}
+    - GUID=${MEDIA_GID}
+    volumes:
+    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/config/radarr:/config
+    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/tmp/downloads:/downloads
+    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/media/movies:/movies
+    - /etc/localtime:/etc/localtime:ro
+
+  jackett:
+    image: linuxserver/jackett
+    networks:
+    - bridge
+    environment:
+    - PUID=${MEDIA_UID}
+    - GUID=${MEDIA_GID}
+    volumes:
+    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/config/jackett:/config
+    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/tmp/watch:/downloads
+    - /etc/localtime:/etc/localtime:ro
+
+  nginx:
+    build:
+      context: nginx
+    ports:
+    - ${MEDIA_BASE_PORT}00:32400
+    - ${MEDIA_BASE_PORT}01:9091
+    - ${MEDIA_BASE_PORT}02:8989
+    - ${MEDIA_BASE_PORT}03:7878
+    - ${MEDIA_BASE_PORT}04:9117
+    depends_on:
+    - transmission
+    - jackett
+    - sonarr
+    - radarr
+    - plex
+    networks:
+    - bridge
+    environment:
+    - PUID=${MEDIA_UID}
+    - GUID=${MEDIA_GID}
+    volumes:
+    - /etc/localtime:/etc/localtime:ro
+
+  ddclient:
+    image: linuxserver/ddclient
+    environment:
+    - PUID=${MEDIA_UID}
+    - GUID=${MEDIA_GID}
+    volumes:
+    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/config/ddclient:/config
+    - /etc/localtime:/etc/localtime:ro
+
+networks:
+  bridge:
+    driver: bridge
