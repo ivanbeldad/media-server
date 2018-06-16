@@ -63,6 +63,9 @@ func (s stop) execute() error {
 	cmd.Env = append(cmd.Env, fmt.Sprintf("COMPOSE_PROJECT_NAME=%s", username))
 	cmd.Env = append(cmd.Env, fmt.Sprintf("MEDIA_UID=%s", uid))
 	cmd.Env = append(cmd.Env, fmt.Sprintf("MEDIA_GID=%s", gid))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("MEDIA_USERNAME=%s", username))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("MEDIA_STORAGE=%s", " "))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("MEDIA_BASE_PORT=%s", " "))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
@@ -75,7 +78,7 @@ func main() {
 	}
 	cmd, err := getCommand()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("\n%s\n", err)
 		printHelp(os.Stdout)
 		os.Exit(0)
 	}
@@ -90,7 +93,8 @@ func getCommand() (command, error) {
 		return nil, fmt.Errorf("not command")
 	}
 	if os.Args[1] != "start" && os.Args[1] != "stop" {
-		return nil, fmt.Errorf("%s is not a valid command", os.Args[1])
+		errFormat := "%s is not a valid command, must be either %q or %q"
+		return nil, fmt.Errorf(errFormat, os.Args[1], "start", "stop")
 	}
 	if os.Args[1] == "start" {
 		return start{}, nil
