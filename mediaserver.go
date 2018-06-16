@@ -75,6 +75,7 @@ func main() {
 	}
 	cmd, err := getCommand()
 	if err != nil {
+		fmt.Println(err)
 		printHelp(os.Stdout)
 		os.Exit(0)
 	}
