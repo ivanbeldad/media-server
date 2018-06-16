@@ -93,9 +93,8 @@ func getCommand() (command, error) {
 	}
 	if os.Args[1] == "start" {
 		return start{}, nil
-	} else {
-		return stop{}, nil
 	}
+	return stop{}, nil
 }
 
 func changeOwner(e environment) error {
