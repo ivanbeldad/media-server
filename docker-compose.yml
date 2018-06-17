@@ -5,7 +5,6 @@ services:
     image: plexinc/pms-docker
     hostname: plex-${MEDIA_USERNAME}
     networks:
-    - bridge
     - macvlan
     environment:
     - PLEX_UID=${MEDIA_UID}
@@ -95,6 +94,7 @@ services:
     - PGID=${MEDIA_GID}
     volumes:
     - /etc/localtime:/etc/localtime:ro
+    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/config/nginx:/etc/nginx/conf.d
 
   ddclient:
     image: linuxserver/ddclient

@@ -131,7 +131,7 @@ func composeUp(e environment) error {
 	fmt.Printf(`
 Applications Listening on:
 
-	Plex			%[1]s00
+	Plex			(Go to app.plex.tv)
 	Tranmission		%[1]s01
 	Sonarr			%[1]s02
 	Radarr			%[1]s03
