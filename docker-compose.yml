@@ -6,6 +6,7 @@ services:
     hostname: plex-${MEDIA_USERNAME}
     networks:
     - macvlan
+    - internal
     environment:
     - PLEX_UID=${MEDIA_UID}
     - PLEX_GID=${MEDIA_GID}
@@ -35,6 +36,7 @@ services:
     - jackett
     networks:
     - bridge
+    - internal
     environment:
     - PUID=${MEDIA_UID}
     - PGID=${MEDIA_GID}
@@ -51,6 +53,7 @@ services:
     - jackett
     networks:
     - bridge
+    - internal
     environment:
     - PUID=${MEDIA_UID}
     - PGID=${MEDIA_GID}
@@ -89,6 +92,7 @@ services:
     - plex
     networks:
     - bridge
+    - internal
     environment:
     - PUID=${MEDIA_UID}
     - PGID=${MEDIA_GID}
@@ -110,3 +114,6 @@ networks:
     driver: bridge
   macvlan:
     external: true
+  internal:
+    driver: overlay
+    internal: true
