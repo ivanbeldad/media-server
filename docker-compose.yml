@@ -3,8 +3,10 @@ version: '3'
 services:
   plex:
     image: plexinc/pms-docker
+    hostname: plex-${MEDIA_USERNAME}
     networks:
     - bridge
+    - macvlan
     environment:
     - PLEX_UID=${MEDIA_UID}
     - PLEX_GID=${MEDIA_GID}
@@ -106,3 +108,5 @@ services:
 networks:
   bridge:
     driver: bridge
+  macvlan:
+    external: true
