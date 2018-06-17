@@ -64,8 +64,8 @@ func (s stop) execute() error {
 	cmd.Env = append(cmd.Env, fmt.Sprintf("MEDIA_UID=%s", uid))
 	cmd.Env = append(cmd.Env, fmt.Sprintf("MEDIA_GID=%s", gid))
 	cmd.Env = append(cmd.Env, fmt.Sprintf("MEDIA_USERNAME=%s", username))
-	cmd.Env = append(cmd.Env, fmt.Sprintf("MEDIA_STORAGE=%s", " "))
-	cmd.Env = append(cmd.Env, fmt.Sprintf("MEDIA_BASE_PORT=%s", " "))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("MEDIA_STORAGE=%s", ""))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("MEDIA_BASE_PORT=%s", ""))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
@@ -125,7 +125,21 @@ func composeUp(e environment) error {
 	cmd.Env = append(cmd.Env, fmt.Sprintf("MEDIA_STORAGE=%s", e.storage))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+	fmt.Printf(`
+Applications Listening on:
+
+	Plex			%[1]s00
+	Tranmission		%[1]s01
+	Sonarr			%[1]s02
+	Radarr			%[1]s03
+	Jackett			%[1]s04
+
+`, e.basePort)
+	return nil
 }
 
 func composeDown() error {
@@ -136,6 +150,7 @@ func composeDown() error {
 	if err != nil {
 		return fmt.Errorf("error executing docker-compose down: %s", err.Error())
 	}
+	fmt.Printf("Applications stopped.\n")
 	return nil
 }
 
