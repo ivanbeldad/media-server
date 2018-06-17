@@ -22,7 +22,7 @@ services:
     - bridge
     environment:
     - PUID=${MEDIA_UID}
-    - GUID=${MEDIA_GID}
+    - PGID=${MEDIA_GID}
     volumes:
     - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/config/transmission:/config
     - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/tmp/downloads:/downloads
@@ -38,7 +38,7 @@ services:
     - bridge
     environment:
     - PUID=${MEDIA_UID}
-    - GUID=${MEDIA_GID}
+    - PGID=${MEDIA_GID}
     volumes:
     - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/config/sonarr:/config
     - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/tmp/downloads:/downloads
@@ -54,7 +54,7 @@ services:
     - bridge
     environment:
     - PUID=${MEDIA_UID}
-    - GUID=${MEDIA_GID}
+    - PGID=${MEDIA_GID}
     volumes:
     - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/config/radarr:/config
     - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/tmp/downloads:/downloads
@@ -67,7 +67,7 @@ services:
     - bridge
     environment:
     - PUID=${MEDIA_UID}
-    - GUID=${MEDIA_GID}
+    - PGID=${MEDIA_GID}
     volumes:
     - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/config/jackett:/config
     - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/tmp/watch:/downloads
@@ -92,7 +92,7 @@ services:
     - bridge
     environment:
     - PUID=${MEDIA_UID}
-    - GUID=${MEDIA_GID}
+    - PGID=${MEDIA_GID}
     volumes:
     - /etc/localtime:/etc/localtime:ro
 
@@ -100,7 +100,7 @@ services:
     image: linuxserver/ddclient
     environment:
     - PUID=${MEDIA_UID}
-    - GUID=${MEDIA_GID}
+    - PGID=${MEDIA_GID}
     volumes:
     - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/config/ddclient:/config
     - /etc/localtime:/etc/localtime:ro
