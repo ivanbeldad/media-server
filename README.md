@@ -21,7 +21,7 @@ Simply clone this repository and execute the mediaserver script
 ```
 git clone https://github.com/ivandelabeldad/media-server.git
 cd media-server
-sudo go run mediaserver start awesome 42 /storage
+sudo go run mediaserver.go start awesome 42 /storage
 ```
 
 ### Help
@@ -61,7 +61,7 @@ obviuous option is macvlan.
 
 A basic example (mostly home networks could use it using 192.168.X.0/24)
 ```
-docker network create -v macvlan --gateway=192.168.1.1 --subnet=192.168.1.0/24 -o parent=eth0 --ip-range=192.168.1.16/28 macvlan
+docker network create -d macvlan --gateway=192.168.1.1 --subnet=192.168.1.0/24 -o parent=eth0 --ip-range=192.168.1.16/28 macvlan
 ```
 
 ## License
