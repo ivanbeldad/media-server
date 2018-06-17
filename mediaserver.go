@@ -39,8 +39,7 @@ func (s start) execute() error {
 	if err != nil {
 		fmt.Printf("error executing docker-compose up: %s", err.Error())
 		fmt.Printf("\ntrying to revert...\n")
-		composeDown()
-		return err
+		return stop{}.execute()
 	}
 	err = changeOwner(env)
 	if err != nil {
@@ -139,18 +138,6 @@ Applications Listening on:
 	Jackett			%[1]s04
 
 `, e.basePort)
-	return nil
-}
-
-func composeDown() error {
-	cmd := exec.Command("docker-compose", "down")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		return fmt.Errorf("error executing docker-compose down: %s", err.Error())
-	}
-	fmt.Printf("Applications stopped.\n")
 	return nil
 }
 
