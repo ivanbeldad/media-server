@@ -75,6 +75,18 @@ services:
     - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/tmp/watch:/downloads
     - /etc/localtime:/etc/localtime:ro
 
+  tautulli:
+    image: tautulli/tautulli
+    networks:
+    - bridge
+    environment:
+    - PUID=${MEDIA_UID}
+    - PGID=${MEDIA_GID}
+    volumes:
+    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/config/tautulli:/config
+    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/config/plex/Application\ Support/Plex\ Media\ Server/Logs:/logs:ro
+    - /etc/localtime:/etc/localtime:ro
+
   nginx:
     build:
       context: nginx
@@ -84,6 +96,7 @@ services:
     - ${MEDIA_BASE_PORT}02:8989
     - ${MEDIA_BASE_PORT}03:7878
     - ${MEDIA_BASE_PORT}04:9117
+    - ${MEDIA_BASE_PORT}05:8181
     depends_on:
     - transmission
     - jackett
