@@ -79,6 +79,7 @@ services:
     image: tautulli/tautulli
     networks:
     - bridge
+    - internal
     environment:
     - PUID=${MEDIA_UID}
     - PGID=${MEDIA_GID}
