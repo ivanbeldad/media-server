@@ -2,131 +2,198 @@ version: '3'
 
 services:
   plex:
+    container_name: ${COMPOSE_PROJECT_NAME}_plex
     image: plexinc/pms-docker
-    hostname: plex-${MEDIA_USERNAME}
+    hostname: plex-mediaserver
     networks:
-    - macvlan
-    - internal
+      - macvlan
+      - bridge
     environment:
-    - PLEX_UID=${MEDIA_UID}
-    - PLEX_GID=${MEDIA_GID}
+      - PLEX_UID=${MEDIA_UID}
+      - PLEX_GID=${MEDIA_GID}
     volumes:
-    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/config/plex:/config
-    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/tmp/transcode:/transcode
-    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/media:/data
-    - /etc/localtime:/etc/localtime:ro
-
-  transmission:
-    image: linuxserver/transmission
-    networks:
-    - bridge
-    environment:
-    - PUID=${MEDIA_UID}
-    - PGID=${MEDIA_GID}
-    volumes:
-    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/config/transmission:/config
-    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/tmp/downloads:/downloads
-    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/tmp/watch:/watch
-    - /etc/localtime:/etc/localtime:ro
-
-  sonarr:
-    image: linuxserver/sonarr
-    depends_on:
-    - transmission
-    - jackett
-    networks:
-    - bridge
-    - internal
-    environment:
-    - PUID=${MEDIA_UID}
-    - PGID=${MEDIA_GID}
-    volumes:
-    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/config/sonarr:/config
-    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/tmp/downloads:/downloads
-    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/media/tv:/tv
-    - /etc/localtime:/etc/localtime:ro
-
-  radarr:
-    image: linuxserver/radarr
-    depends_on:
-    - transmission
-    - jackett
-    networks:
-    - bridge
-    - internal
-    environment:
-    - PUID=${MEDIA_UID}
-    - PGID=${MEDIA_GID}
-    volumes:
-    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/config/radarr:/config
-    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/tmp/downloads:/downloads
-    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/media/movies:/movies
-    - /etc/localtime:/etc/localtime:ro
-
-  jackett:
-    image: linuxserver/jackett
-    networks:
-    - bridge
-    environment:
-    - PUID=${MEDIA_UID}
-    - PGID=${MEDIA_GID}
-    volumes:
-    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/config/jackett:/config
-    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/tmp/watch:/downloads
-    - /etc/localtime:/etc/localtime:ro
+      - plex_conf:/config
+      - plex_logs:/config/Library/Application Support/Plex Media Server/Logs
+      - ${MEDIA_STORAGE}/tmp/transcode:/transcode
+      - ${MEDIA_STORAGE}/media:/data
+      - /etc/localtime:/etc/localtime:ro
 
   tautulli:
+    container_name: ${COMPOSE_PROJECT_NAME}_tautulli
     image: tautulli/tautulli
     networks:
-    - bridge
+      - bridge
     environment:
-    - PUID=${MEDIA_UID}
-    - PGID=${MEDIA_GID}
+      - PUID=${MEDIA_UID}
+      - PGID=${MEDIA_GID}
     volumes:
-    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/config/tautulli:/config
-    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/config/plex/Application\ Support/Plex\ Media\ Server/Logs:/logs:ro
-    - /etc/localtime:/etc/localtime:ro
+      - tautulli_conf:/config
+      - plex_logs:/plex_logs:ro
+      - /etc/localtime:/etc/localtime:ro
+
+  transmission:
+    container_name: ${COMPOSE_PROJECT_NAME}_transmission
+    image: linuxserver/transmission
+    networks:
+      - bridge
+    environment:
+      - PUID=${MEDIA_UID}
+      - PGID=${MEDIA_GID}
+    volumes:
+      - transmission_conf:/config
+      - ${MEDIA_STORAGE}/tmp/downloads:/downloads
+      - ${MEDIA_STORAGE}/tmp/watch:/watch
+      - /etc/localtime:/etc/localtime:ro
+
+  sonarr:
+    container_name: ${COMPOSE_PROJECT_NAME}_sonarr
+    image: linuxserver/sonarr
+    depends_on:
+      - transmission
+      - jackett
+    networks:
+      - bridge
+    environment:
+      - PUID=${MEDIA_UID}
+      - PGID=${MEDIA_GID}
+    volumes:
+    #- ${MEDIA_STORAGE}/config/sonarr:/config
+      - sonarr_conf:/config
+      - ${MEDIA_STORAGE}/tmp/downloads:/downloads
+      - ${MEDIA_STORAGE}/media/tv:/tv
+      - /etc/localtime:/etc/localtime:ro
+
+  sonarr_es:
+    container_name: ${COMPOSE_PROJECT_NAME}_sonarr_es
+    build:
+      context: sonarr_es
+    depends_on:
+      - transmission
+      - jackett
+    networks:
+      - bridge
+    environment:
+      - PUID=${MEDIA_UID}
+      - PGID=${MEDIA_GID}
+    volumes:
+      - sonarr_es_conf:/config
+      - ${MEDIA_STORAGE}/tmp/downloads:/downloads
+      - ${MEDIA_STORAGE}/media/es/tv:/tv
+      - /etc/localtime:/etc/localtime:ro
+
+  parserr:
+    container_name: ${COMPOSE_PROJECT_NAME}_parserr
+    build:
+      context: parserr
+    depends_on:
+      - sonarr_es
+      - radarr_es
+    networks:
+      - bridge
+    user: ${MEDIA_UID}:${MEDIA_GID}
+    environment:
+      - SONARR_DOWNLOAD_FOLDER=${SONARR_DOWNLOAD_FOLDER}
+      - SONARR_URL=${SONARR_URL}
+      - SONARR_APIKEY=${SONARR_APIKEY}
+      - RADARR_DOWNLOAD_FOLDER=${RADARR_DOWNLOAD_FOLDER}
+      - RADARR_URL=${RADARR_URL}
+      - RADARR_APIKEY=${RADARR_APIKEY}
+    volumes:
+      - ${MEDIA_STORAGE}/tmp/downloads:${SONARR_DOWNLOAD_FOLDER}
+
+  radarr:
+    container_name: ${COMPOSE_PROJECT_NAME}_radarr
+    image: linuxserver/radarr
+    depends_on:
+      - transmission
+      - jackett
+    networks:
+      - bridge
+    environment:
+      - PUID=${MEDIA_UID}
+      - PGID=${MEDIA_GID}
+    volumes:
+      - radarr_conf:/config
+      - ${MEDIA_STORAGE}/tmp/downloads:/downloads
+      - ${MEDIA_STORAGE}/media/movies:/movies
+      - /etc/localtime:/etc/localtime:ro
+
+  radarr_es:
+    container_name: ${COMPOSE_PROJECT_NAME}_radarr_es
+    build:
+      context: radarr_es
+    depends_on:
+      - transmission
+      - jackett
+    networks:
+      - bridge
+    environment:
+      - PUID=${MEDIA_UID}
+      - PGID=${MEDIA_GID}
+    volumes:
+      - radarr_es_conf:/config
+      - ${MEDIA_STORAGE}/tmp/downloads:/downloads
+      - ${MEDIA_STORAGE}/media/es/movies:/movies
+      - /etc/localtime:/etc/localtime:ro
+
+  jackett:
+    container_name: ${COMPOSE_PROJECT_NAME}_jackett
+    image: linuxserver/jackett
+    networks:
+      - bridge
+    environment:
+      - PUID=${MEDIA_UID}
+      - PGID=${MEDIA_GID}
+    volumes:
+      - jackett_conf:/config
+      - ${MEDIA_STORAGE}/tmp/watch:/downloads
+      - /etc/localtime:/etc/localtime:ro
 
   nginx:
+    container_name: ${COMPOSE_PROJECT_NAME}_nginx
     build:
       context: nginx
     ports:
-    - ${MEDIA_BASE_PORT}00:32400
-    - ${MEDIA_BASE_PORT}01:9091
-    - ${MEDIA_BASE_PORT}02:8989
-    - ${MEDIA_BASE_PORT}03:7878
-    - ${MEDIA_BASE_PORT}04:9117
-    - ${MEDIA_BASE_PORT}05:8181
+      - ${MEDIA_BASE_PORT}00:32400
+      - ${MEDIA_BASE_PORT}01:9091
+      - ${MEDIA_BASE_PORT}02:8989
+      - ${MEDIA_BASE_PORT}03:7878
+      - ${MEDIA_BASE_PORT}04:9117
+      - ${MEDIA_BASE_PORT}05:8181
+      - ${MEDIA_BASE_PORT}06:9898
+      - ${MEDIA_BASE_PORT}07:8787
     depends_on:
-    - transmission
-    - jackett
-    - sonarr
-    - radarr
-    - plex
+      - transmission
+      - jackett
+      - sonarr
+      - sonarr_es
+      - radarr
+      - radarr_es
+      - plex
     networks:
-    - bridge
-    - internal
+      - bridge
     environment:
-    - PUID=${MEDIA_UID}
-    - PGID=${MEDIA_GID}
+      - PUID=${MEDIA_UID}
+      - PGID=${MEDIA_GID}
     volumes:
-    - /etc/localtime:/etc/localtime:ro
-    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/config/nginx:/etc/nginx/conf.d
+      - nginx_conf:/etc/nginx/conf.d
+      - /etc/localtime:/etc/localtime:ro
 
-  ddclient:
-    image: linuxserver/ddclient
-    environment:
-    - PUID=${MEDIA_UID}
-    - PGID=${MEDIA_GID}
-    volumes:
-    - ${MEDIA_STORAGE}/${MEDIA_USERNAME}/config/ddclient:/config
-    - /etc/localtime:/etc/localtime:ro
+volumes:
+  plex_conf:
+  plex_logs:
+  transmission_conf:
+  jackett_conf:
+  sonarr_conf:
+  sonarr_es_conf:
+  radarr_conf:
+  radarr_es_conf:
+  tautulli_conf:
+  nginx_conf:
 
 networks:
   bridge:
     driver: bridge
   macvlan:
     external: true
-  internal:
-    driver: overlay
-    internal: true
+
